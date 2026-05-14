@@ -29,13 +29,13 @@ const playSubKick = (context: AudioContext, destination: AudioNode, time: number
   const gain = context.createGain()
   osc.type = 'sine'
   osc.frequency.setValueAtTime(80, time)
-  osc.frequency.exponentialRampToValueAtTime(30, time + 0.15)
+  osc.frequency.exponentialRampToValueAtTime(30, time + 0.2)
   gain.gain.setValueAtTime(1, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 1.2)
   osc.connect(gain)
   gain.connect(destination)
   osc.start(time)
-  osc.stop(time + 0.4)
+  osc.stop(time + 1.2)
 }
 
 /** Kick - Standard EDM kick */
@@ -270,16 +270,16 @@ const playSynthLead = (context: AudioContext, destination: AudioNode, time: numb
   osc.frequency.setValueAtTime(330 + (variation * 55), time)
   filter.type = 'lowpass'
   filter.frequency.setValueAtTime(800, time)
-  filter.frequency.exponentialRampToValueAtTime(3000, time + 0.1)
-  filter.frequency.exponentialRampToValueAtTime(800, time + 0.3)
+  filter.frequency.exponentialRampToValueAtTime(3000, time + 0.3)
+  filter.frequency.exponentialRampToValueAtTime(800, time + 1.0)
   filter.Q.setValueAtTime(4, time)
   gain.gain.setValueAtTime(0.25, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.35)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 1.2)
   osc.connect(filter)
   filter.connect(gain)
   gain.connect(destination)
   osc.start(time)
-  osc.stop(time + 0.35)
+  osc.stop(time + 1.2)
 }
 
 /** SynthPad - Warm pad synth */
@@ -294,20 +294,20 @@ const playSynthPad = (context: AudioContext, destination: AudioNode, time: numbe
   osc2.frequency.setValueAtTime(166, time) // slight detune
   filter.type = 'lowpass'
   filter.frequency.setValueAtTime(400, time)
-  filter.frequency.linearRampToValueAtTime(1200, time + 0.2)
-  filter.frequency.linearRampToValueAtTime(600, time + 0.5)
+  filter.frequency.linearRampToValueAtTime(1200, time + 0.4)
+  filter.frequency.linearRampToValueAtTime(600, time + 1.5)
   gain.gain.setValueAtTime(0, time)
-  gain.gain.linearRampToValueAtTime(0.2, time + 0.1)
-  gain.gain.linearRampToValueAtTime(0.15, time + 0.4)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.6)
+  gain.gain.linearRampToValueAtTime(0.2, time + 0.2)
+  gain.gain.linearRampToValueAtTime(0.15, time + 1.0)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 2.5)
   osc.connect(filter)
   osc2.connect(filter)
   filter.connect(gain)
   gain.connect(destination)
   osc.start(time)
   osc2.start(time)
-  osc.stop(time + 0.6)
-  osc2.stop(time + 0.6)
+  osc.stop(time + 2.5)
+  osc2.stop(time + 2.5)
 }
 
 /** SynthPluck - Plucked synth */
@@ -338,11 +338,11 @@ const playBassSub = (context: AudioContext, destination: AudioNode, time: number
   osc.type = 'sine'
   osc.frequency.setValueAtTime(55, time)
   gain.gain.setValueAtTime(0.7, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 1.5)
   osc.connect(gain)
   gain.connect(destination)
   osc.start(time)
-  osc.stop(time + 0.5)
+  osc.stop(time + 1.5)
 }
 
 /** Bass - Standard bass */
@@ -352,11 +352,11 @@ const playBass = (context: AudioContext, destination: AudioNode, time: number): 
   osc.type = 'sine'
   osc.frequency.setValueAtTime(82.5, time)
   gain.gain.setValueAtTime(0.6, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.4)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 1.2)
   osc.connect(gain)
   gain.connect(destination)
   osc.start(time)
-  osc.stop(time + 0.4)
+  osc.stop(time + 1.2)
 }
 
 /** BassGrowl - Growling bass */
@@ -376,15 +376,15 @@ const playBassGrowl = (context: AudioContext, destination: AudioNode, time: numb
   }
   distortion.curve = curve
   gain.gain.setValueAtTime(0.5, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.45)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 1.5)
   osc.connect(distortion)
   osc2.connect(distortion)
   distortion.connect(gain)
   gain.connect(destination)
   osc.start(time)
   osc2.start(time)
-  osc.stop(time + 0.45)
-  osc2.stop(time + 0.45)
+  osc.stop(time + 1.5)
+  osc2.stop(time + 1.5)
 }
 
 // === FX VARIATIONS ===
@@ -517,12 +517,12 @@ const playCymbal = (context: AudioContext, destination: AudioNode, time: number)
   filter.type = 'highpass'
   filter.frequency.setValueAtTime(5000, time)
   gain.gain.setValueAtTime(0.2, time)
-  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.7)
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 2.5)
   noise.connect(filter)
   filter.connect(gain)
   gain.connect(destination)
   noise.start(time)
-  noise.stop(time + 0.8)
+  noise.stop(time + 2.5)
 }
 
 /** Shaker - Shaker/percussive noise */

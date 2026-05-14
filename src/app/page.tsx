@@ -16,17 +16,17 @@
 'use client'
 
 import React, { useCallback, useEffect, useState, useRef } from 'react'
-import { Beatpad } from '@/components/Beatpad'
+import { Volume2, VolumeX, Play, Pause } from 'lucide-react'
 import { Visualizer } from '@/components/Visualizer'
-import { Controls } from '@/components/Controls'
 import { useAudioEngine } from '@/hooks/useAudioEngine'
 import { useSequencer } from '@/hooks/useSequencer'
+import { KEY_CONFIG } from '@/lib/constants'
 
 export default function Home() {
   const [initialized, setInitialized] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
+  const [volume, setVolume] = useState(80)
 
-  // Container ref for visualizer sizing
   const containerRef = useRef<HTMLDivElement>(null)
   const [dimensions, setDimensions] = useState({ width: 1200, height: 800 })
 
@@ -50,20 +50,21 @@ export default function Home() {
     playSound,
     getAudioContext,
     getDestination,
+    setMasterVolume,
   } = useAudioEngine()
 
   const {
     isRecording,
     isPlaying,
     isRecordingRef,
-    isPlayingRef,
     bpm,
     events,
-    loopDuration,
     setBpm,
     startRecording,
     stopRecording,
     toggleRecording,
+    playLoop,
+    stopPlayback,
     clearLoop,
     addEvent,
     onEventTriggered,
@@ -77,61 +78,52 @@ export default function Home() {
     }
   }, [initialized, initialize])
 
-  // FIX: Use isRecordingRef.current instead of stale isRecording state
-  const handleKeyPress = useCallback((key: string) => {
-    if (!initialized) return
-
-    if (isRecordingRef.current) {
-      // When recording: only store event, let loop playback handle it
-      addEvent(key)
-    } else {
-      // When not recording: play immediately for tactile feedback
-      playSound(key)
-    }
-  }, [initialized, isRecordingRef, addEvent, playSound])
-
-  // Also handle immediate playback for visual feedback during recording
   const handleKeyPressWithVisual = useCallback((key: string) => {
     if (!initialized) return
-
-    // Always play immediately for visual feedback
     playSound(key)
-
     if (isRecordingRef.current) {
       addEvent(key)
     }
+    
+    // Trigger visualizer
+    window.dispatchEvent(new CustomEvent('sound-triggered', { detail: { key } }))
   }, [initialized, isRecordingRef, addEvent, playSound])
 
-  // Global keyboard shortcuts
   useEffect(() => {
     if (!initialized) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toUpperCase()
       if (e.code === 'Space' || e.code === 'Escape' || e.code === 'ArrowUp' || e.code === 'ArrowDown') {
         e.preventDefault()
       }
 
-      switch (e.code) {
-        case 'Space':
-          toggleRecording()
-          break
-        case 'Escape':
-          clearLoop()
-          break
-        case 'ArrowUp':
-          setBpm(bpm + 1)
-          break
-        case 'ArrowDown':
-          setBpm(bpm - 1)
-          break
+      if (e.repeat) return
+
+      if (KEY_CONFIG.some(k => k.key === key)) {
+        handleKeyPressWithVisual(key)
+      } else {
+        switch (e.code) {
+          case 'Space':
+            toggleRecording()
+            break
+          case 'Escape':
+            stopPlayback()
+            break
+          case 'ArrowUp':
+            setBpm(bpm + 1)
+            break
+          case 'ArrowDown':
+            setBpm(bpm - 1)
+            break
+        }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [initialized, toggleRecording, clearLoop, bpm, setBpm])
+  }, [initialized, toggleRecording, stopPlayback, bpm, setBpm, handleKeyPressWithVisual])
 
-  // Connect sequencer to visualizer
   useEffect(() => {
     if (!initialized) return
     onEventTriggered((key: string) => {
@@ -139,124 +131,185 @@ export default function Home() {
     })
   }, [initialized, onEventTriggered])
 
+  // Register quadrant centers for visualizer
+  useEffect(() => {
+    const registerFn = (window as any).registerPadPosition
+    if (registerFn) {
+      const w = dimensions.width
+      const h = dimensions.height
+      const qCenters = {
+        drums: { x: w * 0.25, y: h * 0.35 },
+        synth: { x: w * 0.75, y: h * 0.35 },
+        kicks: { x: w * 0.25, y: h * 0.65 },
+        shots: { x: w * 0.75, y: h * 0.65 }
+      }
+      
+      KEY_CONFIG.forEach(pad => {
+        // Map key to quadrant
+        // Q-P (0-9 in array) -> Drums
+        // A-L (10-18) -> Kicks
+        // Z-. (19-27) -> Synth
+        // 1-0 (28-37) -> Shots
+        let center = qCenters.drums
+        const idx = KEY_CONFIG.indexOf(pad)
+        if (idx >= 0 && idx < 10) center = qCenters.drums
+        else if (idx >= 10 && idx < 19) center = qCenters.kicks
+        else if (idx >= 19 && idx < 28) center = qCenters.synth
+        else if (idx >= 28) center = qCenters.shots
+        
+        registerFn(pad.key, center.x, center.y)
+      })
+    }
+  }, [dimensions])
+
   return (
     <main
       ref={containerRef}
-      className="relative min-h-screen w-full overflow-hidden select-none"
-      style={{ backgroundColor: '#08080c' }}
+      className="relative w-full h-screen overflow-hidden select-none"
+      style={{ backgroundColor: '#091016' }}
       onClick={handleFirstInteraction}
     >
+      {/* Grid Background */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px)',
+        backgroundSize: '40px 40px',
+        backgroundPosition: 'center center',
+        opacity: 0.5,
+      }}></div>
+
       {/* Canvas Visualizer */}
       <Visualizer
         width={dimensions.width}
         height={dimensions.height}
-        onTriggered={(key) => {}}
+        onTriggered={() => {}}
       />
 
-      {/* Recording border indicator */}
-      {isRecording && (
-        <div
-          className="absolute inset-0 pointer-events-none z-50"
-          style={{
-            boxShadow: 'inset 0 0 0 3px #ff3366, inset 0 0 80px rgba(255, 51, 102, 0.25)',
-            animation: 'recordPulse 0.5s ease-in-out infinite',
-          }}
-        />
-      )}
+      {/* Main UI Overlay */}
+      <div className="absolute inset-0 z-10 flex flex-col justify-between p-4 pointer-events-none">
+        
+        {/* TOP BAR */}
+        <div className="flex justify-between items-start pointer-events-auto w-full max-w-[1400px] mx-auto pt-2 px-4">
+          {/* Key Sequence Suggestions */}
+          <div className="w-64 text-left pointer-events-none pt-2">
+            <h3 className="text-[#00f0ff] text-xs font-bold tracking-widest mb-2 opacity-80">SUGGESTED SEQUENCES:</h3>
+            <ul className="text-gray-400 text-xs font-mono space-y-1 opacity-70">
+              <li>• Q - R - E - U (House Beat)</li>
+              <li>• A - F - K - 4 (Heavy Bass)</li>
+              <li>• Q - T - X - M (Synth Groove)</li>
+              <li>• W - Y - L - B (Techno Vibe)</li>
+            </ul>
+          </div>
+          
+          {/* Logo Center */}
+          <div className="relative border border-[#00f0ff50] rounded-lg px-8 py-2 bg-[#00f0ff05] backdrop-blur-sm"
+               style={{ clipPath: 'polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)' }}>
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-[2px] bg-[#ff00aa] shadow-[0_0_10px_#ff00aa]"></div>
+            <h1 className="text-3xl font-bold tracking-widest text-transparent" style={{ WebkitTextStroke: '1px #00f0ff', textShadow: '0 0 10px #00f0ff40' }}>
+              MIX<span style={{ WebkitTextStroke: '1px #ff00aa', textShadow: '0 0 10px #ff00aa80' }}>N</span>MATCH
+            </h1>
+          </div>
 
-      {/* Main UI Layer */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-8 gap-6">
-        {/* Title */}
-        <div className="text-center">
-          <h1
-            className="text-5xl md:text-6xl font-bold tracking-[0.2em]"
-            style={{
-              background: 'linear-gradient(135deg, #00f0ff 0%, #ff00aa 50%, #a0ff00 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 30px rgba(0, 240, 255, 0.4))',
-            }}
-          >
-            MIXNMATCH
-          </h1>
-          <p className="text-gray-500 text-xs font-mono mt-2 tracking-widest uppercase">
-            EDM Beatpad & Live Looper
-          </p>
+          {/* Right Controls */}
+          <div className="flex items-center gap-4 border border-[#00f0ff50] rounded-lg px-6 py-2 bg-[#00f0ff05] backdrop-blur-sm"
+               style={{ clipPath: 'polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px))' }}>
+            <div className="text-white text-xl font-bold font-mono">
+              128 <span className="text-sm text-gray-400">BPM</span>
+            </div>
+            <div className="w-px h-6 bg-[#00f0ff50] mx-2"></div>
+            <div className="flex items-center gap-2 text-[#00f0ff]">
+              <Volume2 size={16} />
+              <input type="range" className="w-24 h-1 bg-[#00f0ff30] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-[#00f0ff] [&::-webkit-slider-thumb]:rounded-sm" min="0" max="100" value={volume} onChange={(e)=>{
+                const val = parseInt(e.target.value);
+                setVolume(val);
+                setMasterVolume(val);
+              }} />
+            </div>
+          </div>
         </div>
 
-        {/* Controls */}
-        <Controls
-          bpm={bpm}
-          onBpmChange={setBpm}
-          isRecording={isRecording}
-          isPlaying={isPlaying}
-          onToggleRecording={toggleRecording}
-          onClearLoop={clearLoop}
-          eventCount={events.length}
-        />
-
-        {/* Beatpad */}
-        <Beatpad
-          onKeyPress={handleKeyPressWithVisual}
-          isInitialized={initialized}
-        />
-
-        {/* Footer */}
-        <div className="flex items-center gap-6 text-gray-600 text-xs font-mono">
-          <span>4-bar loop</span>
-          <span className="text-gray-700">|</span>
-          <span>{bpm} BPM</span>
-          <span className="text-gray-700">|</span>
-          <span>{Math.round(loopDuration / 1000)}s</span>
+        {/* 4 QUADRANTS LABELS */}
+        <div className="absolute inset-0 flex flex-wrap pointer-events-none">
+          <div className="w-1/2 h-1/2 flex items-center justify-center">
+            <span className="text-[#00f0ff] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#00f0ff]">DRUMS (Q-P)</span>
+          </div>
+          <div className="w-1/2 h-1/2 flex items-center justify-center">
+            <span className="text-[#a0ff00] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#a0ff00]">SYNTH / FX (Z-M)</span>
+          </div>
+          <div className="w-1/2 h-1/2 flex items-center justify-center">
+            <span className="text-[#ff00aa] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#ff00aa]">KICKS / BASS (A-L)</span>
+          </div>
+          <div className="w-1/2 h-1/2 flex items-center justify-center">
+            <span className="text-[#aa00ff] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#aa00ff]">ONE-SHOTS (1-0)</span>
+          </div>
         </div>
 
-        {/* Keyboard hints */}
-        <div className="flex gap-4 text-gray-600 text-xs font-mono">
-          <span className="px-2 py-1 bg-gray-900/50 rounded border border-gray-800">Q-P Drums</span>
-          <span className="px-2 py-1 bg-gray-900/50 rounded border border-gray-800">A-L Bass</span>
-          <span className="px-2 py-1 bg-gray-900/50 rounded border border-gray-800">Z-M FX</span>
-          <span className="px-2 py-1 bg-gray-900/50 rounded border border-gray-800">1-0 Shots</span>
+        {/* CENTER INSTRUCTION TEXT */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-gray-500 font-mono text-sm tracking-widest opacity-50 uppercase">
+            Press keys on keyboard to play music
+          </span>
+        </div>
+
+        {/* BOTTOM BAR */}
+        <div className="flex justify-between items-end pointer-events-auto w-full max-w-[1400px] mx-auto pb-4 px-4">
+          <div className="flex gap-4">
+            <button
+              onClick={toggleRecording}
+              className="px-8 py-3 rounded-lg border-2 font-bold tracking-widest transition-all"
+              style={{
+                borderColor: isRecording ? '#ff3366' : '#ff336650',
+                color: '#ff3366',
+                backgroundColor: isRecording ? '#ff336620' : 'transparent',
+                boxShadow: isRecording ? '0 0 15px #ff336680' : 'none'
+              }}
+            >
+              {isRecording ? 'STOP' : 'START'}
+            </button>
+            <button
+              onClick={clearLoop}
+              className="px-8 py-3 rounded-lg border-2 border-white font-bold tracking-widest transition-all"
+              style={{
+                backgroundColor: isPlaying ? 'transparent' : 'rgba(255,255,255,0.1)',
+                color: isPlaying ? 'white' : '#ccc',
+                borderColor: isPlaying ? 'white' : 'rgba(255,255,255,0.5)'
+              }}
+            >
+              CLEAR
+            </button>
+            <button
+              onClick={() => isPlaying ? stopPlayback() : playLoop()}
+              className="flex items-center gap-2 px-8 py-3 rounded-lg border-2 border-[#00f0ff] font-bold tracking-widest transition-all"
+              style={{ 
+                color: (isPlaying && !isRecording) ? '#091016' : '#00f0ff',
+                backgroundColor: (isPlaying && !isRecording) ? '#00f0ff' : '#00f0ff10',
+                boxShadow: (isPlaying && !isRecording) ? '0 0 20px #00f0ff80' : '0 0 15px #00f0ff40'
+              }}
+            >
+              {isPlaying ? <Pause size={18} /> : <Play size={18} />}
+              LOOP PLAYBACK
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4 border border-[#00f0ff50] rounded-lg px-6 py-3 bg-[#00f0ff05] backdrop-blur-sm opacity-40 grayscale pointer-events-none select-none">
+            <div className="flex flex-col text-right pr-4 border-r border-[#00f0ff50]">
+              <span className="text-gray-400 text-xs font-bold tracking-wider">1-BAR</span>
+              <span className="text-white text-sm font-bold tracking-wider">LOOP</span>
+            </div>
+            <div className="w-48 h-8 flex items-center justify-center opacity-70">
+              <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="w-full h-full fill-white">
+                <path d="M0,10 L2,10 L3,5 L4,15 L5,8 L6,12 L7,2 L8,18 L9,10 L10,10 L12,10 L13,14 L14,6 L15,10 L17,10 L18,7 L19,13 L20,10 L22,10 L23,4 L24,16 L25,10 L27,10 L28,8 L29,12 L30,10 L32,10 L33,2 L34,18 L35,6 L36,14 L37,10 L39,10 L40,5 L41,15 L42,10 L44,10 L45,8 L46,12 L47,10 L49,10 L50,3 L51,17 L52,9 L53,11 L54,10 L56,10 L57,6 L58,14 L59,10 L61,10 L62,4 L63,16 L64,8 L65,12 L66,10 L68,10 L69,5 L70,15 L71,10 L73,10 L74,7 L75,13 L76,10 L78,10 L79,2 L80,18 L81,6 L82,14 L83,10 L85,10 L86,8 L87,12 L88,10 L90,10 L91,5 L92,15 L93,10 L95,10 L96,8 L97,12 L98,10 L100,10" fill="none" stroke="currentColor" strokeWidth="1" />
+                <path d="M0,10 L100,10" stroke="#ff3366" strokeWidth="0.5" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Start Overlay */}
       {showOverlay && (
-        <div
-          className="absolute inset-0 z-50 flex items-center justify-center"
-          style={{
-            backgroundColor: '#08080c',
-            background: 'radial-gradient(ellipse at center, #0f0f18 0%, #08080c 100%)',
-          }}
-        >
-          <div className="text-center">
-            <h1
-              className="text-4xl font-bold tracking-[0.3em] mb-6"
-              style={{
-                background: 'linear-gradient(135deg, #00f0ff, #ff00aa)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              MIXNMATCH
-            </h1>
-            <button
-              onClick={handleFirstInteraction}
-              className="
-                px-10 py-4 rounded-full
-                bg-gradient-to-r from-cyan-500 to-pink-500
-                text-black font-bold text-sm tracking-widest uppercase
-                shadow-[0_0_40px_rgba(0,240,255,0.4),0_0_80px_rgba(255,0,170,0.3)]
-                hover:shadow-[0_0_60px_rgba(0,240,255,0.6),0_0_100px_rgba(255,0,170,0.5)]
-                hover:scale-105
-                transition-all duration-300
-              "
-            >
-              Start Session
-            </button>
-            <p className="text-gray-600 text-xs font-mono mt-4">
-              Click to initialize audio engine
-            </p>
-          </div>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#091016]/90 backdrop-blur-md pointer-events-auto">
+          <button onClick={handleFirstInteraction} className="px-10 py-4 rounded-full border border-[#00f0ff] text-[#00f0ff] font-bold text-xl tracking-widest hover:bg-[#00f0ff20] hover:shadow-[0_0_30px_#00f0ff80] transition-all">
+            INITIALIZE SYSTEM
+          </button>
         </div>
       )}
     </main>

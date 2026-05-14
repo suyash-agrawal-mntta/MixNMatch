@@ -22,6 +22,7 @@ export interface UseAudioEngineReturn {
   playSound: (key: string, variation?: number) => void
   getAudioContext: () => AudioContext | null
   getDestination: () => AudioNode | null
+  setMasterVolume: (val: number) => void
 }
 
 export const useAudioEngine = (): UseAudioEngineReturn => {
@@ -38,30 +39,18 @@ export const useAudioEngine = (): UseAudioEngineReturn => {
 
   /**
    * Initialize the Web Audio API context and audio chain
-   *
-   * Audio Chain:
-   * [Sound Sources] -> [Compressor] -> [Analyser] -> [Master Gain] -> [Destination]
-   *
-   * - Compressor: Prevents clipping when multiple sounds play simultaneously
-   * - Analyser: Provides FFT data for the visualizer
-   * - Master Gain: Overall volume control
    */
   const initialize = useCallback(() => {
     // Don't re-initialize if already done
     if (engineRef.current.isInitialized) return
 
     try {
-      // Create AudioContext - the core of Web Audio API
-      // We use the standard AudioContext, not webkit prefix
       const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
       const context = new AudioContextClass()
 
-      // Create master gain node for volume control
       const masterGain = context.createGain()
       masterGain.gain.setValueAtTime(0.8, context.currentTime) // 80% volume
 
-      // Create compressor to prevent clipping
-      // threshold: -24dB, knee: 30dB, ratio: 12:1, attack: 0.003s, release: 0.25s
       const compressor = context.createDynamicsCompressor()
       compressor.threshold.setValueAtTime(-24, context.currentTime)
       compressor.knee.setValueAtTime(30, context.currentTime)
@@ -69,19 +58,14 @@ export const useAudioEngine = (): UseAudioEngineReturn => {
       compressor.attack.setValueAtTime(0.003, context.currentTime)
       compressor.release.setValueAtTime(0.25, context.currentTime)
 
-      // Create analyser for visualizer FFT data
-      // fftSize of 256 gives us 128 frequency bins
       const analyser = context.createAnalyser()
       analyser.fftSize = 256
-      analyser.smoothingTimeConstant = 0.8 // Smooth out the values for better visuals
+      analyser.smoothingTimeConstant = 0.8
 
-      // Build the audio chain:
-      // compressor -> analyser -> masterGain -> destination (speakers)
       compressor.connect(analyser)
       analyser.connect(masterGain)
       masterGain.connect(context.destination)
 
-      // Store references
       engineRef.current = {
         context,
         masterGain,
@@ -96,40 +80,31 @@ export const useAudioEngine = (): UseAudioEngineReturn => {
     }
   }, [])
 
-  /**
-   * Play a synthesized sound for the given key
-   *
-   * @param key - The key pressed (A-Z, 0-9)
-   * @param variation - Optional variation index for sounds with multiple variants
-   */
   const playSoundCallback = useCallback((key: string, variation: number = 0) => {
     const engine = engineRef.current
 
     if (!engine.context || !engine.compressor) {
-      console.warn('Audio engine not initialized')
       return
     }
 
-    // Use AudioContext.currentTime for precise scheduling
-    // This is the "wall clock" time in seconds
     const now = engine.context.currentTime
-
-    // Play the sound, routing to the compressor (before analyser/master gain)
     playSound(engine.context, engine.compressor, key, now, variation)
   }, [])
 
-  /**
-   * Get the AudioContext for external use (e.g., sequencer timing)
-   */
   const getAudioContext = useCallback(() => {
     return engineRef.current.context
   }, [])
 
-  /**
-   * Get the master destination node for routing
-   */
   const getDestination = useCallback(() => {
     return engineRef.current.compressor
+  }, [])
+
+  const setMasterVolume = useCallback((val: number) => {
+    const engine = engineRef.current
+    if (engine.masterGain && engine.context) {
+      // Linear scale is fine for this demo, mapping 0-100 to 0.0-1.0
+      engine.masterGain.gain.setTargetAtTime(val / 100, engine.context.currentTime, 0.05)
+    }
   }, [])
 
   return {
@@ -139,5 +114,6 @@ export const useAudioEngine = (): UseAudioEngineReturn => {
     playSound: playSoundCallback,
     getAudioContext,
     getDestination,
+    setMasterVolume
   }
 }

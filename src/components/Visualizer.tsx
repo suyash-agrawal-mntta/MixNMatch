@@ -1,37 +1,19 @@
-/**
- * Visualizer Component — Enhanced canvas-based reactive visuals
- *
- * Features:
- * - Expanding rings from pad positions on key trigger
- * - Color-coded particle bursts by row theme
- * - Subtle ambient background pulse
- * - Smooth 60fps rendering with requestAnimationFrame
- */
-
 import React, { useRef, useEffect, useCallback } from 'react'
 import { KEY_CONFIG } from '@/lib/constants'
 
-interface Particle {
+interface Effect {
   x: number
   y: number
   vx: number
   vy: number
-  radius: number
-  alpha: number
-  color: string
-  birthTime: number
-  lifetime: number
-}
-
-interface Ring {
-  x: number
-  y: number
   radius: number
   maxRadius: number
   alpha: number
   color: string
   birthTime: number
   lifetime: number
+  type: 'ring' | 'triangle' | 'wave' | 'starburst'
+  angle: number
 }
 
 interface VisualizerProps {
@@ -42,10 +24,8 @@ interface VisualizerProps {
 
 export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const particlesRef = useRef<Particle[]>([])
-  const ringsRef = useRef<Ring[]>([])
+  const effectsRef = useRef<Effect[]>([])
   const animationRef = useRef<number>(0)
-  const lastTimeRef = useRef<number>(0)
   const padPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map())
 
   const registerPadPosition = useCallback((key: string, x: number, y: number) => {
@@ -53,9 +33,9 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
   }, [])
 
   useEffect(() => {
-    (window as unknown as { registerPadPosition: typeof registerPadPosition }).registerPadPosition = registerPadPosition
+    (window as any).registerPadPosition = registerPadPosition
     return () => {
-      delete (window as unknown as { registerPadPosition?: typeof registerPadPosition }).registerPadPosition
+      delete (window as any).registerPadPosition
     }
   }, [registerPadPosition])
 
@@ -69,48 +49,65 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
       const emitX = padPos?.x ?? width / 2
       const emitY = padPos?.y ?? height / 2
 
-      // Add expanding ring
-      ringsRef.current.push({
-        x: emitX,
-        y: emitY,
-        radius: 8,
-        maxRadius: 120 + Math.random() * 80,
-        alpha: 0.7,
-        color,
-        birthTime: performance.now(),
-        lifetime: 1200,
-      })
+      let type: Effect['type'] = 'ring'
+      if (color === '#00f0ff') type = 'ring'
+      else if (color === '#a0ff00') type = 'triangle'
+      else if (color === '#ff00aa') type = 'wave'
+      else if (color === '#aa00ff') type = 'starburst'
 
-      // Add particles
-      const particleCount = 6 + Math.floor(Math.random() * 4)
-      for (let i = 0; i < particleCount; i++) {
-        const angle = (Math.PI * 2 * i) / particleCount + Math.random() * 0.3
-        const speed = 1.5 + Math.random() * 2.5
-        particlesRef.current.push({
-          x: emitX,
-          y: emitY,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          radius: 2 + Math.random() * 3,
-          alpha: 1,
-          color,
-          birthTime: performance.now(),
-          lifetime: 600 + Math.random() * 400,
+      if (type === 'ring') {
+        effectsRef.current.push({
+          x: emitX, y: emitY, vx: 0, vy: 0,
+          radius: 10, maxRadius: 100 + Math.random() * 50,
+          alpha: 0.8, color, birthTime: performance.now(), lifetime: 1000,
+          type, angle: 0
         })
+      } else if (type === 'triangle') {
+        const count = 3 + Math.floor(Math.random() * 3)
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2
+          const speed = 2 + Math.random() * 4
+          effectsRef.current.push({
+            x: emitX, y: emitY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            radius: 10 + Math.random() * 20, maxRadius: 0,
+            alpha: 1, color, birthTime: performance.now(), lifetime: 800 + Math.random() * 400,
+            type, angle: Math.random() * Math.PI * 2
+          })
+        }
+      } else if (type === 'wave') {
+        const count = 5 + Math.floor(Math.random() * 5)
+        for (let i = 0; i < count; i++) {
+          const dir = Math.random() > 0.5 ? 1 : -1
+          const speed = 1 + Math.random() * 3
+          effectsRef.current.push({
+            x: emitX, y: emitY, vx: dir * speed, vy: 0,
+            radius: 20 + Math.random() * 60, maxRadius: 0, // height of wave
+            alpha: 0.8, color, birthTime: performance.now(), lifetime: 800,
+            type, angle: 0
+          })
+        }
+      } else if (type === 'starburst') {
+        const count = 8 + Math.floor(Math.random() * 8)
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2
+          const speed = 3 + Math.random() * 6
+          effectsRef.current.push({
+            x: emitX, y: emitY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            radius: 2 + Math.random() * 4, maxRadius: 0,
+            alpha: 1, color, birthTime: performance.now(), lifetime: 600 + Math.random() * 400,
+            type, angle
+          })
+        }
       }
 
-      // Limit effects
-      if (particlesRef.current.length > 80) {
-        particlesRef.current = particlesRef.current.slice(-80)
-      }
-      if (ringsRef.current.length > 40) {
-        ringsRef.current = ringsRef.current.slice(-40)
+      if (effectsRef.current.length > 200) {
+        effectsRef.current = effectsRef.current.slice(-200)
       }
     }
 
-    window.addEventListener('sound-triggered' as never, handleKeyTriggered as EventListener)
+    window.addEventListener('sound-triggered' as any, handleKeyTriggered)
     return () => {
-      window.removeEventListener('sound-triggered' as never, handleKeyTriggered as EventListener)
+      window.removeEventListener('sound-triggered' as any, handleKeyTriggered)
     }
   }, [width, height])
 
@@ -120,71 +117,88 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const render = (timestamp: number) => {
-      lastTimeRef.current = timestamp
-
-      // Clear
-      ctx.fillStyle = '#08080c'
-      ctx.fillRect(0, 0, width, height)
-
-      // Subtle ambient radial gradient
-      const ambient = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, Math.max(width, height) * 0.7)
-      ambient.addColorStop(0, 'rgba(15, 15, 25, 0.6)')
-      ambient.addColorStop(1, 'rgba(8, 8, 12, 0)')
-      ctx.fillStyle = ambient
-      ctx.fillRect(0, 0, width, height)
+    const render = () => {
+      ctx.clearRect(0, 0, width, height)
 
       const now = performance.now()
 
-      // Draw rings
-      ringsRef.current = ringsRef.current.filter(ring => {
-        const age = now - ring.birthTime
-        if (age >= ring.lifetime) return false
-        const progress = age / ring.lifetime
-        ring.radius = ring.maxRadius * progress
-        ring.alpha = 0.6 * (1 - progress)
+      effectsRef.current = effectsRef.current.filter(effect => {
+        const age = now - effect.birthTime
+        if (age >= effect.lifetime) return false
+        const progress = age / effect.lifetime
+        effect.alpha = 1 - progress
+        
+        effect.x += effect.vx
+        effect.y += effect.vy
+        
+        ctx.globalAlpha = effect.alpha
+        ctx.strokeStyle = effect.color
+        ctx.fillStyle = effect.color
 
-        ctx.beginPath()
-        ctx.arc(ring.x, ring.y, ring.radius, 0, Math.PI * 2)
-        ctx.strokeStyle = ring.color
-        ctx.globalAlpha = ring.alpha
-        ctx.lineWidth = 2
-        ctx.stroke()
-
-        // Inner bright edge
-        ctx.beginPath()
-        ctx.arc(ring.x, ring.y, ring.radius * 0.85, 0, Math.PI * 2)
-        ctx.strokeStyle = ring.color
-        ctx.globalAlpha = ring.alpha * 0.4
-        ctx.lineWidth = 6
-        ctx.stroke()
-
-        return true
-      })
-
-      // Draw particles
-      particlesRef.current = particlesRef.current.filter(particle => {
-        const age = now - particle.birthTime
-        if (age >= particle.lifetime) return false
-        const progress = age / particle.lifetime
-        particle.alpha = 1 - progress
-        particle.x += particle.vx
-        particle.y += particle.vy
-        particle.vx *= 0.97
-        particle.vy *= 0.97
-
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2)
-        ctx.fillStyle = particle.color
-        ctx.globalAlpha = particle.alpha
-        ctx.fill()
-
-        // Glow
-        ctx.beginPath()
-        ctx.arc(particle.x, particle.y, particle.radius * 2, 0, Math.PI * 2)
-        ctx.fillStyle = particle.color
-        ctx.globalAlpha = particle.alpha * 0.2
-        ctx.fill()
+        if (effect.type === 'ring') {
+          effect.radius = effect.maxRadius * Math.pow(progress, 0.5) // smooth expansion
+          ctx.beginPath()
+          ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2)
+          ctx.lineWidth = 4 * (1 - progress)
+          ctx.stroke()
+          
+          // inner ring
+          ctx.beginPath()
+          ctx.arc(effect.x, effect.y, effect.radius * 0.7, 0, Math.PI * 2)
+          ctx.lineWidth = 2 * (1 - progress)
+          ctx.stroke()
+        } 
+        else if (effect.type === 'triangle') {
+          effect.vx *= 0.95
+          effect.vy *= 0.95
+          effect.angle += 0.05
+          
+          ctx.save()
+          ctx.translate(effect.x, effect.y)
+          ctx.rotate(effect.angle)
+          ctx.beginPath()
+          ctx.moveTo(0, -effect.radius)
+          ctx.lineTo(effect.radius * 0.866, effect.radius * 0.5)
+          ctx.lineTo(-effect.radius * 0.866, effect.radius * 0.5)
+          ctx.closePath()
+          
+          if (Math.random() > 0.5) {
+            ctx.fill()
+          } else {
+            ctx.lineWidth = 2
+            ctx.stroke()
+          }
+          ctx.restore()
+        }
+        else if (effect.type === 'wave') {
+          effect.vx *= 0.98
+          ctx.lineWidth = 4
+          ctx.beginPath()
+          ctx.moveTo(effect.x, effect.y - effect.radius * (1 - progress))
+          ctx.lineTo(effect.x, effect.y + effect.radius * (1 - progress))
+          ctx.stroke()
+          
+          ctx.globalAlpha = effect.alpha * 0.3
+          ctx.lineWidth = 12
+          ctx.beginPath()
+          ctx.moveTo(effect.x, effect.y - effect.radius * (1 - progress))
+          ctx.lineTo(effect.x, effect.y + effect.radius * (1 - progress))
+          ctx.stroke()
+        }
+        else if (effect.type === 'starburst') {
+          effect.vx *= 0.92
+          effect.vy *= 0.92
+          ctx.beginPath()
+          ctx.moveTo(effect.x, effect.y)
+          ctx.lineTo(effect.x - effect.vx * 4, effect.y - effect.vy * 4) // streak trail
+          ctx.lineWidth = 3
+          ctx.stroke()
+          
+          // star glow
+          ctx.beginPath()
+          ctx.arc(effect.x, effect.y, effect.radius * (1-progress), 0, Math.PI * 2)
+          ctx.fill()
+        }
 
         return true
       })

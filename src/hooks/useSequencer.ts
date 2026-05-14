@@ -59,6 +59,8 @@ export interface UseSequencerReturn {
   startRecording: () => void
   stopRecording: () => void
   toggleRecording: () => void
+  playLoop: () => void
+  stopPlayback: () => void
   clearLoop: () => void
   addEvent: (key: string) => void
   getAnalyserData: () => Uint8Array | null
@@ -105,43 +107,38 @@ export const useSequencer = (
   const loopDuration = getLoopDuration(bpm)
 
   /**
-   * Start recording mode
-   * Clears previous events and begins capturing key presses
+   * Start recording mode (Overdub)
+   * Starts playback if not already playing. DOES NOT clear previous events.
    */
   const startRecording = useCallback(() => {
     const context = getAudioContext()
     if (!context) return
 
-    // Reset events
-    recordedEventsRef.current = []
-    setEvents([])
-
-    // Start loop timer
-    // We use AudioContext time as the reference for precise sync
-    loopStartTimeRef.current = context.currentTime * 1000 // Convert to ms
+    if (!isPlayingRef.current) {
+      // Start loop timer from now
+      loopStartTimeRef.current = context.currentTime * 1000
+      isPlayingRef.current = true
+      setIsPlaying(true)
+    }
 
     // Set recording state
     isRecordingRef.current = true
     setIsRecording(true)
-    isPlayingRef.current = true
-    setIsPlaying(true)
   }, [getAudioContext])
 
   /**
-   * Stop recording mode
-   * Loop continues to play back recorded sequence
+   * Stop recording mode, but keep playing
    */
   const stopRecording = useCallback(() => {
     isRecordingRef.current = false
     setIsRecording(false)
-    // Keep isPlaying true - loop continues
   }, [])
 
   /**
-   * Toggle between recording and stopped states
+   * Toggle between recording and overdub states
    */
   const toggleRecording = useCallback(() => {
-    if (isRecordingRef.current || !isPlayingRef.current) {
+    if (isRecordingRef.current) {
       stopRecording()
     } else {
       startRecording()
@@ -149,7 +146,42 @@ export const useSequencer = (
   }, [startRecording, stopRecording])
 
   /**
-   * Clear all recorded events and stop playback
+   * Play the existing loop without recording
+   */
+  const playLoop = useCallback(() => {
+    const context = getAudioContext()
+    if (!context) return
+
+    if (!isPlayingRef.current) {
+      loopStartTimeRef.current = context.currentTime * 1000
+      isPlayingRef.current = true
+      setIsPlaying(true)
+    }
+    // ensure recording is off
+    isRecordingRef.current = false
+    setIsRecording(false)
+  }, [getAudioContext])
+
+  /**
+   * Stop playback. If already stopped, clear the loop.
+   */
+  const stopPlayback = useCallback(() => {
+    if (isPlayingRef.current) {
+      // Just stop playback
+      isPlayingRef.current = false
+      setIsPlaying(false)
+      isRecordingRef.current = false
+      setIsRecording(false)
+      lastTriggeredRef.current.clear()
+    } else {
+      // Already stopped -> clear the loop
+      recordedEventsRef.current = []
+      setEvents([])
+    }
+  }, [])
+
+  /**
+   * Explicitly clear loop
    */
   const clearLoop = useCallback(() => {
     isRecordingRef.current = false
@@ -320,6 +352,8 @@ export const useSequencer = (
     startRecording,
     stopRecording,
     toggleRecording,
+    playLoop,
+    stopPlayback,
     clearLoop,
     addEvent,
     getAnalyserData: () => analyserDataRef.current,

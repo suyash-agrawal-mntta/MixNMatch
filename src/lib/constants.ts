@@ -77,7 +77,7 @@ export const DEFAULT_BPM = 128
 export const MIN_BPM = 60
 export const MAX_BPM = 200
 export const BEATS_PER_BAR = 4
-export const BARS_PER_LOOP = 4
+export const BARS_PER_LOOP = 1
 
 // Calculate timing in milliseconds
 export const getBeatDuration = (bpm: number): number => 60000 / bpm
