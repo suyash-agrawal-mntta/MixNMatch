@@ -59,7 +59,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
         effectsRef.current.push({
           x: emitX, y: emitY, vx: 0, vy: 0,
           radius: 10, maxRadius: 100 + Math.random() * 50,
-          alpha: 0.8, color, birthTime: performance.now(), lifetime: 1000,
+          alpha: 0.2, color, birthTime: performance.now(), lifetime: 1000,
           type, angle: 0
         })
       } else if (type === 'triangle') {
@@ -70,7 +70,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
           effectsRef.current.push({
             x: emitX, y: emitY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
             radius: 10 + Math.random() * 20, maxRadius: 0,
-            alpha: 1, color, birthTime: performance.now(), lifetime: 800 + Math.random() * 400,
+            alpha: 0.25, color, birthTime: performance.now(), lifetime: 800 + Math.random() * 400,
             type, angle: Math.random() * Math.PI * 2
           })
         }
@@ -82,7 +82,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
           effectsRef.current.push({
             x: emitX, y: emitY, vx: dir * speed, vy: 0,
             radius: 20 + Math.random() * 60, maxRadius: 0, // height of wave
-            alpha: 0.8, color, birthTime: performance.now(), lifetime: 800,
+            alpha: 0.2, color, birthTime: performance.now(), lifetime: 800,
             type, angle: 0
           })
         }
@@ -94,7 +94,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
           effectsRef.current.push({
             x: emitX, y: emitY, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
             radius: 2 + Math.random() * 4, maxRadius: 0,
-            alpha: 1, color, birthTime: performance.now(), lifetime: 600 + Math.random() * 400,
+            alpha: 0.25, color, birthTime: performance.now(), lifetime: 600 + Math.random() * 400,
             type, angle
           })
         }
@@ -139,13 +139,13 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
           effect.radius = effect.maxRadius * Math.pow(progress, 0.5) // smooth expansion
           ctx.beginPath()
           ctx.arc(effect.x, effect.y, effect.radius, 0, Math.PI * 2)
-          ctx.lineWidth = 4 * (1 - progress)
+          ctx.lineWidth = 2 * (1 - progress)
           ctx.stroke()
           
           // inner ring
           ctx.beginPath()
           ctx.arc(effect.x, effect.y, effect.radius * 0.7, 0, Math.PI * 2)
-          ctx.lineWidth = 2 * (1 - progress)
+          ctx.lineWidth = 1 * (1 - progress)
           ctx.stroke()
         } 
         else if (effect.type === 'triangle') {
@@ -172,14 +172,14 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
         }
         else if (effect.type === 'wave') {
           effect.vx *= 0.98
-          ctx.lineWidth = 4
+          ctx.lineWidth = 2
           ctx.beginPath()
           ctx.moveTo(effect.x, effect.y - effect.radius * (1 - progress))
           ctx.lineTo(effect.x, effect.y + effect.radius * (1 - progress))
           ctx.stroke()
           
           ctx.globalAlpha = effect.alpha * 0.3
-          ctx.lineWidth = 12
+          ctx.lineWidth = 6
           ctx.beginPath()
           ctx.moveTo(effect.x, effect.y - effect.radius * (1 - progress))
           ctx.lineTo(effect.x, effect.y + effect.radius * (1 - progress))
@@ -191,7 +191,7 @@ export const Visualizer: React.FC<VisualizerProps> = ({ width, height }) => {
           ctx.beginPath()
           ctx.moveTo(effect.x, effect.y)
           ctx.lineTo(effect.x - effect.vx * 4, effect.y - effect.vy * 4) // streak trail
-          ctx.lineWidth = 3
+          ctx.lineWidth = 1.5
           ctx.stroke()
           
           // star glow

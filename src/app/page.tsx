@@ -22,6 +22,19 @@ import { useAudioEngine } from '@/hooks/useAudioEngine'
 import { useSequencer } from '@/hooks/useSequencer'
 import { KEY_CONFIG } from '@/lib/constants'
 
+const GithubIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" /></svg>
+)
+const LinkedinIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
+)
+const MailIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+)
+const PortfolioIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><path d="M15 9a3 3 0 0 0-6 0c0 4 6 3 6 7a3 3 0 0 1-6 0" /></svg>
+)
+
 export default function Home() {
   const [initialized, setInitialized] = useState(false)
   const [showOverlay, setShowOverlay] = useState(true)
@@ -228,18 +241,18 @@ export default function Home() {
         </div>
 
         {/* 4 QUADRANTS LABELS */}
-        <div className="absolute inset-0 flex flex-wrap pointer-events-none">
-          <div className="w-1/2 h-1/2 flex items-center justify-center">
-            <span className="text-[#00f0ff] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#00f0ff]">DRUMS (Q-P)</span>
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-[25%] top-[35%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+            <span className="text-[#00f0ff] font-bold tracking-widest text-xs sm:text-sm drop-shadow-[0_0_12px_#00f0ff]">DRUMS (Q-P)</span>
           </div>
-          <div className="w-1/2 h-1/2 flex items-center justify-center">
-            <span className="text-[#a0ff00] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#a0ff00]">SYNTH / FX (Z-M)</span>
+          <div className="absolute left-[75%] top-[35%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+            <span className="text-[#a0ff00] font-bold tracking-widest text-xs sm:text-sm drop-shadow-[0_0_12px_#a0ff00]">SYNTH / FX (Z-M)</span>
           </div>
-          <div className="w-1/2 h-1/2 flex items-center justify-center">
-            <span className="text-[#ff00aa] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#ff00aa]">KICKS / BASS (A-L)</span>
+          <div className="absolute left-[25%] top-[65%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+            <span className="text-[#ff00aa] font-bold tracking-widest text-xs sm:text-sm drop-shadow-[0_0_12px_#ff00aa]">KICKS / BASS (A-L)</span>
           </div>
-          <div className="w-1/2 h-1/2 flex items-center justify-center">
-            <span className="text-[#aa00ff] font-bold tracking-widest text-sm drop-shadow-[0_0_8px_#aa00ff]">ONE-SHOTS (1-0)</span>
+          <div className="absolute left-[75%] top-[65%] -translate-x-1/2 -translate-y-1/2 flex items-center justify-center">
+            <span className="text-[#aa00ff] font-bold tracking-widest text-xs sm:text-sm drop-shadow-[0_0_12px_#aa00ff]">ONE-SHOTS (1-0)</span>
           </div>
         </div>
 
@@ -251,7 +264,7 @@ export default function Home() {
         </div>
 
         {/* BOTTOM BAR */}
-        <div className="flex justify-between items-end pointer-events-auto w-full max-w-[1400px] mx-auto pb-4 px-4">
+        <div className="flex justify-between items-end pointer-events-auto w-full max-w-[1400px] mx-auto pb-32 px-4">
           <div className="flex gap-4">
             <button
               onClick={toggleRecording}
@@ -301,6 +314,49 @@ export default function Home() {
                 <path d="M0,10 L100,10" stroke="#ff3366" strokeWidth="0.5" />
               </svg>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-[#091016]/95 backdrop-blur-xl border-t border-white/5 py-4 px-8 flex flex-col gap-4 z-20">
+        <div className="flex justify-between items-center w-full max-w-[1400px] mx-auto">
+          <div className="flex flex-col gap-1">
+            <a href="https://suyash-agrawal-mntta.github.io/" target="_blank" rel="noreferrer" className="text-white text-xl font-black tracking-wider hover:text-[#00f0ff] transition-colors uppercase">
+              SUYASH AGRAWAL
+            </a>
+            <span className="text-[#ff00aa] text-xs font-bold tracking-[0.2em] uppercase">
+              AI Product Manager <span className="text-white/20 mx-2">&</span> Developer
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <a href="https://suyash-agrawal-mntta.github.io/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+              <PortfolioIcon size={16} /> PORTFOLIO
+            </a>
+            <a href="https://github.com/suyash-agrawal-mntta" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+              <GithubIcon size={16} /> GITHUB
+            </a>
+            <a href="https://www.linkedin.com/in/suyash-agrawal-mntta/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+              <LinkedinIcon size={16} /> LINKEDIN
+            </a>
+            <a href="mailto:suyash.mntta@gmail.com" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+              <MailIcon size={16} /> GMAIL
+            </a>
+          </div>
+        </div>
+        
+        <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent my-1"></div>
+        
+        <div className="flex justify-between items-center w-full max-w-[1400px] mx-auto text-[10px] font-bold tracking-widest text-white/40">
+          <div className="flex gap-8">
+            <a href="/about" className="hover:text-white/80 transition-colors">ABOUT MIXNMATCH</a>
+            <a href="/privacy" className="hover:text-white/80 transition-colors">PRIVACY & LEGAL</a>
+          </div>
+          <div className="flex items-center gap-4">
+            <span>BUILT WITH <span className="text-[#ff00aa]/80">AI</span> + <span className="text-[#00f0ff]/80">WEB AUDIO API</span> 🎧</span>
+            <span className="text-white/20">•</span>
+            <span>© 2026 MIXNMATCH</span>
           </div>
         </div>
       </div>

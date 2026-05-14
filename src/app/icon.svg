@@ -1,0 +1,11 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <rect width="256" height="256" rx="64" fill="#091016"/>
+  <!-- Neon glow behind the M -->
+  <path d="M 64 192 L 64 64 L 128 128 L 192 64 L 192 192" fill="none" stroke="#00f0ff" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" opacity="0.3" filter="blur(8px)"/>
+  <path d="M 64 192 L 64 64 L 128 128 L 192 64 L 192 192" fill="none" stroke="#ff00aa" stroke-width="24" stroke-linejoin="round" stroke-linecap="round" opacity="0.5" filter="blur(16px)"/>
+  
+  <!-- Core M shape -->
+  <path d="M 64 192 L 64 64 L 128 128 L 192 64 L 192 192" fill="none" stroke="#00f0ff" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- Pink accent -->
+  <path d="M 128 128 L 192 64" fill="none" stroke="#ff00aa" stroke-width="20" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>
