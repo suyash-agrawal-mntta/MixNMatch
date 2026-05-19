@@ -322,7 +322,7 @@ export default function Home() {
       <div className="absolute bottom-0 left-0 right-0 pointer-events-auto bg-[#091016]/95 backdrop-blur-xl border-t border-white/5 py-4 px-8 flex flex-col gap-4 z-20">
         <div className="flex justify-between items-center w-full max-w-[1400px] mx-auto">
           <div className="flex flex-col gap-1">
-            <a href="https://suyash-agrawal-mntta.github.io/" target="_blank" rel="noreferrer" className="text-white text-xl font-black tracking-wider hover:text-[#00f0ff] transition-colors uppercase">
+            <a href="https://suyashagrawal2004.github.io/" target="_blank" rel="noreferrer" className="text-white text-xl font-black tracking-wider hover:text-[#00f0ff] transition-colors uppercase">
               SUYASH AGRAWAL
             </a>
             <span className="text-[#ff00aa] text-xs font-bold tracking-[0.2em] uppercase">
@@ -331,16 +331,16 @@ export default function Home() {
           </div>
           
           <div className="flex items-center gap-4">
-            <a href="https://suyash-agrawal-mntta.github.io/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+            <a href="https://suyashagrawal2004.github.io/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
               <PortfolioIcon size={16} /> PORTFOLIO
             </a>
-            <a href="https://github.com/suyash-agrawal-mntta" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+            <a href="https://github.com/suyashagrawal2004" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
               <GithubIcon size={16} /> GITHUB
             </a>
-            <a href="https://www.linkedin.com/in/suyash-agrawal-mntta/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+            <a href="https://www.linkedin.com/in/suyashagrawal2004/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
               <LinkedinIcon size={16} /> LINKEDIN
             </a>
-            <a href="mailto:suyash.mntta@gmail.com" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
+            <a href="mailto:dm.suyash.a@gmail.com" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-[11px] font-bold tracking-widest px-3 py-1.5 rounded-full hover:bg-white/5 border border-transparent hover:border-white/10">
               <MailIcon size={16} /> GMAIL
             </a>
           </div>
