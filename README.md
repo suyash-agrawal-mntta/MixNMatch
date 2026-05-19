@@ -2,7 +2,7 @@
 
 > A browser-based interactive EDM beatpad & live-looping sequencer powered entirely by real-time Web Audio API synthesis. Zero latency, no audio files, pure browser-driven electronic music.
 
-🚀 **Live Site:** [https://suyashagrawal2004.github.io/](https://suyashagrawal2004.github.io/)
+🚀 **Live Site:** [https://mix-n-match-ten.vercel.app/](https://mix-n-match-ten.vercel.app/)
 
 ---
 
